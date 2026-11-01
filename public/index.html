@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#08131b">
+  <title>VoltScope | BMS HIL Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#overview"><span class="brand-mark">V</span><span>VOLTSCOPE<small>BMS · HIL MONITOR</small></span></a>
+    <div class="side-label">WORKSPACE</div>
+    <a class="nav active" data-view="overview" href="#overview"><span>▦</span> Overview</a>
+    <a class="nav" data-view="telemetry" href="#telemetry"><span>⌁</span> Live telemetry</a>
+    <a class="nav" data-view="can" href="#can"><span>⇄</span> CAN bus</a>
+    <a class="nav" data-view="diagnostics" href="#diagnostics"><span>◉</span> Diagnostics <i class="nav-dot" id="diagDot"></i></a>
+    <a class="nav" data-view="hil" href="#hil"><span>⏵</span> HIL test bench</a>
+    <a class="nav" data-view="lab" href="#lab"><span>⚠</span> Fault injection</a>
+    <a class="nav" data-view="alerts" href="#alerts"><span>≡</span> Alert center</a>
+    <div class="side-bottom">
+      <div class="device">
+        <span class="pulse" id="linkPulse"></span>
+        <div>
+          <b id="deviceName">BMS-DUT-01</b>
+          <small id="deviceLink">SIMULATION · CAN 0</small>
+        </div>
+      </div>
+      <div class="user">
+        <div class="avatar">B5</div>
+        <div><b>Batch 05</b><small>ECE CAPSTONE</small></div>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div class="crumb">Workspace <span>/</span> <b id="crumb">System overview</b></div>
+      <div class="top-actions">
+        <span class="clock" id="clock">--:--:--</span>
+        <span class="live" id="modeBadge"><i></i> LIVE SIMULATION</span>
+        <span class="data-tag" id="dataClassTag">SIMULATED DATA</span>
+        <button class="icon-btn" id="alertBell" title="Alerts">♧<em id="alertMark" hidden></em></button>
+        <div class="avatar small">B5</div>
+      </div>
+    </header>
+
+    <section class="view show" id="view-overview">
+      <div class="page">
+        <section class="heading">
+          <div>
+            <div class="eyebrow">MONITORING CONSOLE <span>·</span> PACK ALPHA-01</div>
+            <h1>System overview</h1>
+            <p>Delay-aware diagnostics and hardware-in-the-loop validation.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="button secondary" id="pauseBtn">Ⅱ <span>Pause stream</span></button>
+            <button class="button primary" id="exportBtn">↧ <span>Export report</span></button>
+          </div>
+        </section>
+        <section class="status-strip" id="statusStrip">
+          <div class="status-main">
+            <span class="status-icon" id="statusIcon">✓</span>
+            <div><small>SYSTEM STATUS</small><b id="systemStatus">All systems nominal</b></div>
+          </div>
+          <div class="status-item"><small>LAST UPDATE</small><b id="lastUpdate">—</b></div>
+          <div class="status-item"><small>UPTIME</small><b id="uptime">00h 00m 00s</b></div>
+          <div class="status-item"><small>OPERATING MODE</small><b class="mono" id="modeLabel">SIMULATION</b></div>
+        </section>
+        <section class="metrics">
+          <article class="metric-card">
+            <div class="metric-top"><span>STATE OF CHARGE</span><span class="metric-icon green">▱</span></div>
+            <div class="metric-value"><strong id="soc">—</strong><small>%</small><span class="change" id="socHint">OCV estimate</span></div>
+            <div class="meter"><span id="socBar" style="width:0%"></span></div>
+            <div class="metric-foot"><span>Pack voltage</span><b id="voltage">—</b></div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-top"><span>PACK TEMPERATURE</span><span class="metric-icon orange">♨</span></div>
+            <div class="metric-value"><strong id="temp">—</strong><small>°C</small><span class="change" id="tempHint">—</span></div>
+            <div class="meter orange-meter"><span id="tempBar" style="width:0%"></span></div>
+            <div class="metric-foot"><span>Safe operating range</span><b>−20° to 60°C</b></div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-top"><span>PACK CURRENT</span><span class="metric-icon blue">⌁</span></div>
+            <div class="metric-value"><strong id="current">—</strong><small>A</small><span class="change" id="chargeState">—</span></div>
+            <div class="metric-foot"><span>Battery health</span><b id="battHealth">—</b></div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-top"><span>CAN PATH DELAY</span><span class="metric-icon purple">⇢</span></div>
+            <div class="metric-value"><strong id="latency">—</strong><small>ms</small><span class="change" id="delayClass">—</span></div>
+            <div class="meter purple-meter"><span id="deliveryBar" style="width:0%"></span></div>
+            <div class="metric-foot"><span>Dropped frames</span><b id="drops">—</b></div>
+          </article>
+        </section>
+        <section class="middle-grid">
+          <article class="panel chart-panel">
+            <div class="panel-head">
+              <div><h2>Battery telemetry</h2><p>Live Chart.js traces · last samples</p></div>
+              <select id="rangeSelect">
+                <option value="60">Last 60 samples</option>
+                <option value="150">Last 150 samples</option>
+                <option value="300">Last 300 samples</option>
+              </select>
+            </div>
+            <canvas id="overviewChart" height="120"></canvas>
+          </article>
+          <article class="panel diag-panel">
+            <div class="panel-head">
+              <div><h2>Fault diagnosis</h2><p>Delay-compensated residual observer</p></div>
+              <span class="badge success" id="diagBadge"><i></i> NOMINAL</span>
+            </div>
+            <div class="diagnosis-hero" id="diagHero">
+              <div class="check-ring" id="diagRing">✓</div>
+              <div><b id="diagTitle">No active faults</b><span id="diagDetail">All sensors within expected range</span></div>
+            </div>
+            <div class="diag-list">
+              <div class="diag-row"><span class="diag-bullet green-b"></span><span>Voltage residual</span><b id="resV">—</b><small id="resVState">—</small></div>
+              <div class="diag-row"><span class="diag-bullet green-b"></span><span>Temperature residual</span><b id="resT">—</b><small id="resTState">—</small></div>
+              <div class="diag-row"><span class="diag-bullet green-b"></span><span>Delay hold</span><b id="delayHold">—</b><small>Observer</small></div>
+              <div class="diag-row"><span class="diag-bullet green-b"></span><span>Fault isolation</span><b id="isoLat">—</b><small id="isoState">Ready</small></div>
+            </div>
+            <button class="text-button" data-view="lab">＋ Open fault injection lab <span>→</span></button>
+          </article>
+        </section>
+        <footer>VOLTSCOPE <span>·</span> CAPSTONE MONITORING DASHBOARD <span class="foot-right" id="footNote">SIMULATION MODE · DATA IS DEMONSTRATION ONLY</span></footer>
+      </div>
+    </section>
+
+    <section class="view" id="view-telemetry">
+      <div class="page">
+        <section class="heading"><div><div class="eyebrow">LIVE STREAM</div><h1>Telemetry</h1><p>Voltage, current, temperature and SoC. Missing sensors stay blank — they are never filled with sample values.</p></div></section>
+        <div class="chart-grid">
+          <article class="panel"><h2>Pack voltage</h2><canvas id="chartV"></canvas></article>
+          <article class="panel"><h2>Pack current</h2><canvas id="chartI"></canvas></article>
+          <article class="panel"><h2>Temperature</h2><canvas id="chartT"></canvas></article>
+          <article class="panel"><h2>State of charge</h2><canvas id="chartSoc"></canvas></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-can">
+      <div class="page">
+        <section class="heading"><div><div class="eyebrow">BUS 0</div><h1>CAN communication</h1><p>Inter-arrival delay is measured on the receiver clock. Theoretical bit-time delay is not shown as measured.</p></div></section>
+        <section class="metrics">
+          <article class="metric-card"><div class="metric-top"><span>BUS STATUS</span></div><div class="metric-value"><strong id="canUp">—</strong></div><div class="metric-foot"><span>Health</span><b id="canHealth">—</b></div></article>
+          <article class="metric-card"><div class="metric-top"><span>MESSAGE ID</span></div><div class="metric-value"><strong id="canId">—</strong></div></article>
+          <article class="metric-card"><div class="metric-top"><span>RX RATE</span></div><div class="metric-value"><strong id="rxRate">—</strong><small>Hz</small></div></article>
+          <article class="metric-card"><div class="metric-top"><span>DELAY CLASS</span></div><div class="metric-value"><strong id="canDelayClass">—</strong></div></article>
+        </section>
+        <article class="panel">
+          <div class="panel-head"><div><h2>Frame history</h2><p>Most recent decoded 0x101 telemetry frames</p></div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Time</th><th>ID</th><th>Seq</th><th>Delay</th><th>Class</th><th>Drops</th></tr></thead>
+              <tbody id="canBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="view" id="view-diagnostics">
+      <div class="page">
+        <section class="heading"><div><div class="eyebrow">OBSERVER</div><h1>Delay-aware diagnosis</h1><p>Physical residuals update only on fresh in-time frames. Late CAN data is held and classified as communication.</p></div></section>
+        <div class="split">
+          <article class="panel">
+            <h2>Classification</h2>
+            <ul class="fault-ul" id="faultList"><li>No faults</li></ul>
+            <p class="hint" id="isoNote"></p>
+          </article>
+          <article class="panel">
+            <h2>Configurable thresholds</h2>
+            <form id="thForm" class="th-form">
+              <label>Voltage min <input name="voltageMin" type="number" step="0.1"></label>
+              <label>Voltage max <input name="voltageMax" type="number" step="0.1"></label>
+              <label>Drift residual (V) <input name="voltageDrift" type="number" step="0.1"></label>
+              <label>Temp warn (°C) <input name="tempWarn" type="number" step="0.1"></label>
+              <label>Temp crit (°C) <input name="tempCrit" type="number" step="0.1"></label>
+              <label>Delay warn (ms) <input name="delayWarnMs" type="number" step="1"></label>
+              <label>Delay crit (ms) <input name="delayCritMs" type="number" step="1"></label>
+              <label>Dropout count <input name="dropoutWarn" type="number" step="1"></label>
+              <label>Timeout (ms) <input name="timeoutMs" type="number" step="1"></label>
+              <button class="button primary" type="submit">Save thresholds</button>
+            </form>
+            <p class="hint">Default voltage window is for the 400 V simulated pack. Recalibrate before hardware diagnosis.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-hil">
+      <div class="page">
+        <section class="heading">
+          <div><div class="eyebrow">VALIDATION</div><h1>HIL test bench</h1><p>Software suite exercises the diagnostic classifier. Physical coverage is recorded only when serial hardware frames actually arrive.</p></div>
+          <div class="heading-actions">
+            <button class="button secondary" id="runPhysicalBtn">Physical suite</button>
+            <button class="button primary" id="runBtn">⏵ Run software tests</button>
+          </div>
+        </section>
+        <section class="status-strip">
+          <div class="status-main"><span class="status-icon">⏵</span><div><small>PROGRESS</small><b id="hilProgress">Idle</b></div></div>
+          <div class="status-item"><small>PASSED</small><b id="hilPass">—</b></div>
+          <div class="status-item"><small>FAILED</small><b id="hilFail">—</b></div>
+          <div class="status-item"><small>COVERAGE KIND</small><b id="hilKind">SOFTWARE</b></div>
+        </section>
+        <div class="split">
+          <article class="panel">
+            <h2>Cases</h2>
+            <div id="hilCases" class="hil-cases"></div>
+            <div class="mini-meter" style="margin-top:16px"><i id="hilBar" style="width:0%"></i></div>
+          </article>
+          <article class="panel">
+            <h2>Coverage report</h2>
+            <p id="hilNote" class="hint">No suite has been executed in this session.</p>
+            <div class="coverage-breakdown" id="hilCov"></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-lab">
+      <div class="page">
+        <section class="heading"><div><div class="eyebrow">SIMULATION ONLY</div><h1>Fault injection lab</h1><p>These controls bias the software simulator. They are rejected in hardware mode unless a validated injector exists.</p></div></section>
+        <div class="lab-grid">
+          <button class="lab-btn" data-fault="normal">Normal operation</button>
+          <button class="lab-btn" data-fault="sensorDrift">Sensor drift</button>
+          <button class="lab-btn" data-fault="highTemp">High temperature</button>
+          <button class="lab-btn" data-fault="canDelay">CAN delay</button>
+          <button class="lab-btn" data-fault="packetDropout">Packet dropout</button>
+          <button class="lab-btn" data-fault="commFailure">Communication failure</button>
+          <button class="lab-btn" data-fault="abnormalVoltage">Abnormal voltage</button>
+        </div>
+        <p class="hint" id="labStatus">Injector idle · simulation</p>
+      </div>
+    </section>
+
+    <section class="view" id="view-alerts">
+      <div class="page">
+        <section class="heading"><div><div class="eyebrow">EVENTS</div><h1>Alert center</h1><p>Info, warning and critical records with timestamps. History is in-memory unless MongoDB is configured.</p></div></section>
+        <div class="events-list" id="eventsList"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.8.1/dist/socket.io.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

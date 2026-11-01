@@ -1,0 +1,24 @@
+{
+  "name": "voltscope-ev-bms-dashboard",
+  "version": "1.0.0",
+  "description": "Delay-aware EV BMS monitoring dashboard with simulation and hardware serial telemetry",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "private": true,
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  },
+  "optionalDependencies": {
+    "mongodb": "^6.12.0",
+    "serialport": "^12.0.0"
+  }
+}
