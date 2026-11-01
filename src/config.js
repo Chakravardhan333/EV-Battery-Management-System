@@ -11,7 +11,7 @@ const mode = String(env("BMS_MODE", "simulation")).toLowerCase() === "hardware"
   : "simulation";
 
 module.exports = {
-  host: env("HOST", "127.0.0.1"),
+  host: env("HOST", "0.0.0.0"),
   port: Number(env("PORT", "3000")),
   mode,
   apiToken: env("BMS_API_TOKEN", ""),
@@ -27,3 +27,4 @@ module.exports = {
   /** Expected telemetry period used for dropout / delay residuals (ms). */
   expectedPeriodMs: 200,
 };
+
